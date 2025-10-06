@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { sdk } from '@farcaster/frame-sdk/dist/index.js';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 interface FrameUser {
   fid: number;
