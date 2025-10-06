@@ -59,8 +59,30 @@ Deno.serve(async (req: Request) => {
       .eq("owner_fid", profile.fid)
       .order("slot", { ascending: true });
 
+    // Fetch and convert profile images to base64
+    const entriesWithBase64 = await Promise.all(
+      (entries || []).map(async (entry) => {
+        if (entry.target?.pfp_url) {
+          try {
+            const base64Image = await fetchImageAsBase64(entry.target.pfp_url);
+            return {
+              ...entry,
+              target: {
+                ...entry.target,
+                pfp_base64: base64Image,
+              },
+            };
+          } catch (err) {
+            console.error(`Failed to fetch image for ${entry.target.username}:`, err);
+            return entry;
+          }
+        }
+        return entry;
+      })
+    );
+
     // Generate SVG image
-    const svg = generateOGImage(profile, entries || []);
+    const svg = generateOGImage(profile, entriesWithBase64);
 
     return new Response(svg, {
       status: 200,
@@ -78,6 +100,19 @@ Deno.serve(async (req: Request) => {
     });
   }
 });
+
+async function fetchImageAsBase64(imageUrl: string): Promise<string> {
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = btoa(
+    String.fromCharCode(...new Uint8Array(arrayBuffer))
+  );
+  const contentType = response.headers.get('content-type') || 'image/jpeg';
+  return `data:${contentType};base64,${base64}`;
+}
 
 function generateOGImage(
   profile: any,
@@ -102,12 +137,12 @@ function generateOGImage(
 
     const displayName = entry.target?.display_name || "Unknown";
     const username = entry.target?.username || "";
-    const pfpUrl = entry.target?.pfp_url || "";
+    const pfpBase64 = entry.target?.pfp_base64 || "";
 
     return `
       <g>
         <rect x="${x}" y="${y}" width="${cardSize}" height="${cardSize}" fill="#fff" stroke="#ccc" stroke-width="2"/>
-        ${pfpUrl ? `<image x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" href="${pfpUrl}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" fill="#f0f0f0"/>`}
+        ${pfpBase64 ? `<image x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" href="${pfpBase64}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" fill="#f0f0f0"/>`}
         <text x="${x + cardSize / 2}" y="${y + cardSize - 30}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0066cc">${escapeXml(truncate(displayName, 10))}</text>
         <text x="${x + cardSize / 2}" y="${y + cardSize - 15}" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">@${escapeXml(truncate(username, 10))}</text>
         <circle cx="${x + 15}" cy="${y + 15}" r="10" fill="#ff9933"/>
