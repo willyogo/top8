@@ -43,6 +43,8 @@ export function updateMetaTags(params: {
   const miniAppMeta = {
     version: 'next',
     imageUrl: params.image,
+    splashImageUrl: `${window.location.origin}/top8_icon_text_200.png`,
+    splashBackgroundColor: '#FFFFEE',
     button: {
       title: 'View Top 8',
       action: {
