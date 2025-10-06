@@ -34,9 +34,9 @@ export function HomePage() {
 
       const fetchAndSetUsername = async () => {
         try {
-          if (miniAppContext.user.username) {
+          if (miniAppContext.user?.username) {
             setUsername(miniAppContext.user.username);
-          } else {
+          } else if (miniAppContext.user?.fid) {
             const userData = await getUserByFid(miniAppContext.user.fid);
             if (userData?.username) {
               setUsername(userData.username);
