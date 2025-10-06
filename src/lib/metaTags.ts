@@ -41,14 +41,13 @@ export function updateMetaTags(params: {
 
   // Update mini app metadata
   const miniAppMeta = {
-    version: 'next',
+    version: '1',
     imageUrl: params.image,
-    splashImageUrl: `${window.location.origin}/top8_icon_text_200.png`,
-    splashBackgroundColor: '#FFFFEE',
     button: {
       title: 'View Top 8',
       action: {
-        type: 'launch_frame'
+        type: 'launch_miniapp',
+        url: params.url
       }
     }
   };

@@ -26,12 +26,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch user profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("fid, username, display_name, pfp_url")
@@ -45,7 +43,6 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Fetch top 8 entries
     const { data: entries } = await supabase
       .from("top8_entries")
       .select(`
@@ -59,7 +56,6 @@ Deno.serve(async (req: Request) => {
       .eq("owner_fid", profile.fid)
       .order("slot", { ascending: true });
 
-    // Fetch and convert profile images to base64
     const entriesWithBase64 = await Promise.all(
       (entries || []).map(async (entry) => {
         if (entry.target?.pfp_url) {
@@ -81,7 +77,6 @@ Deno.serve(async (req: Request) => {
       })
     );
 
-    // Generate SVG image
     const svg = generateOGImage(profile, entriesWithBase64);
 
     return new Response(svg, {
@@ -118,17 +113,15 @@ function generateOGImage(
   profile: any,
   entries: any[]
 ): string {
-  const width = 1200;
-  const height = 630;
-  const cardSize = 140;
-  const gap = 20;
-  const startX = 100;
-  const startY = 180;
+  const width = 900;
+  const height = 600;
+  const cardSize = 120;
+  const gap = 15;
+  const startX = 90;
+  const startY = 160;
 
-  // Sort entries by slot
   const sortedEntries = [...entries].sort((a, b) => a.slot - b.slot);
 
-  // Generate cards
   const cards = sortedEntries.slice(0, 8).map((entry, index) => {
     const col = index % 4;
     const row = Math.floor(index / 4);
@@ -164,8 +157,8 @@ function generateOGImage(
       <rect width="${width}" height="${height}" fill="#f8f8f8"/>
       
       <!-- Header -->
-      <rect width="${width}" height="120" fill="url(#headerGradient)"/>
-      <text x="${width / 2}" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fff">${escapeXml(profile.display_name)}'s Top 8</text>
+      <rect width="${width}" height="100" fill="url(#headerGradient)"/>
+      <text x="${width / 2}" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#fff">${escapeXml(profile.display_name)}'s Top 8</text>
       
       <!-- Cards -->
       ${cards}
