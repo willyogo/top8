@@ -146,16 +146,14 @@ function generateOGImage(
     const x = startX + col * (cardSize + gap);
     const y = startY + row * (cardSize + gap);
 
-    const displayName = entry.target?.display_name || "Unknown";
     const username = entry.target?.username || "";
     const pfpBase64 = entry.target?.pfp_base64 || "";
 
     return `
       <g>
         <rect x="${x}" y="${y}" width="${cardSize}" height="${cardSize}" fill="#fff" stroke="#ccc" stroke-width="2"/>
-        ${pfpBase64 ? `<image x="${x + 15}" y="${y + 35}" width="${cardSize - 30}" height="${cardSize - 30}" href="${pfpBase64}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 15}" y="${y + 35}" width="${cardSize - 30}" height="${cardSize - 30}" fill="#f0f0f0"/>`}
-        <text x="${x + cardSize / 2}" y="${y + cardSize - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0066cc">${escapeXml(truncate(displayName, 12))}</text>
-        <text x="${x + cardSize / 2}" y="${y + cardSize - 20}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">@${escapeXml(truncate(username, 12))}</text>
+        ${pfpBase64 ? `<image x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" href="${pfpBase64}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" fill="#f0f0f0"/>`}
+        <text x="${x + cardSize / 2}" y="${y + cardSize + 18}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0066cc">@${escapeXml(truncate(username, 14))}</text>
         <circle cx="${x + 20}" cy="${y + 20}" r="14" fill="#ff9933"/>
         <text x="${x + 20}" y="${y + 26}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">${entry.slot}</text>
       </g>
