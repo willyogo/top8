@@ -46,25 +46,21 @@ Deno.serve(async (req: Request) => {
     }
 
     // Fetch top 8 entries
-    const { data: top8Data } = await supabase
-      .from("top8")
+    const { data: entries } = await supabase
+      .from("top8_entries")
       .select(`
-        entries:top8_entries(
-          slot,
-          target:profiles!top8_entries_target_fid_fkey(
-            username,
-            display_name,
-            pfp_url
-          )
+        slot,
+        target:profiles!top8_entries_target_fid_fkey(
+          username,
+          display_name,
+          pfp_url
         )
       `)
-      .eq("fid", profile.fid)
-      .maybeSingle();
-
-    const entries = top8Data?.entries || [];
+      .eq("owner_fid", profile.fid)
+      .order("slot", { ascending: true });
 
     // Generate SVG image
-    const svg = generateOGImage(profile, entries);
+    const svg = generateOGImage(profile, entries || []);
 
     return new Response(svg, {
       status: 200,
@@ -139,8 +135,6 @@ function generateOGImage(
       <!-- Cards -->
       ${cards}
       
-      <!-- Footer -->
-      <text x="${width / 2}" y="${height - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#666">MySpace for Farcaster</text>
     </svg>
   `;
 }
