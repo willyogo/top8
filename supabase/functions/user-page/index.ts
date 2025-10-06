@@ -7,7 +7,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const DOMAIN = "https://farcaster-top-8-frie-c060.bolt.host";
+const VERCEL_DOMAIN = "https://top8-pi.vercel.app";
+const BOLT_DOMAIN = "https://farcaster-top-8-frie-c060.bolt.host";
+const DOMAIN = VERCEL_DOMAIN;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {

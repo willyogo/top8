@@ -43,9 +43,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send('Invalid username');
   }
 
+  console.log(`[${username}] User-Agent: ${userAgent}, isCrawler: ${isCrawler(userAgent)}`);
+
   if (isCrawler(userAgent)) {
     try {
       const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/user-page?username=${encodeURIComponent(username)}`;
+      console.log(`[${username}] Fetching from edge function: ${edgeFunctionUrl}`);
 
       const response = await fetch(edgeFunctionUrl, {
         headers: {
@@ -53,37 +56,76 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       });
 
+      console.log(`[${username}] Edge function response status: ${response.status}`);
+
       if (!response.ok) {
-        console.error(`Edge function returned ${response.status} for username: ${username}`);
-        return res.status(response.status).send('Error fetching user page');
+        const errorText = await response.text();
+        console.error(`[${username}] Edge function error: ${response.status} - ${errorText}`);
+
+        const fallbackHtml = generateFallbackHtml(username);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(200).send(fallbackHtml);
       }
 
       const html = await response.text();
+      console.log(`[${username}] Successfully fetched dynamic HTML from edge function`);
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
       return res.status(200).send(html);
     } catch (error) {
-      console.error('Error fetching from edge function:', error);
-      return res.status(500).send('Internal server error');
+      console.error(`[${username}] Error fetching from edge function:`, error);
+
+      const fallbackHtml = generateFallbackHtml(username);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(fallbackHtml);
     }
   }
 
-  const indexHtml = `<!doctype html>
+  const indexHtml = generateFallbackHtml(username);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  return res.status(200).send(indexHtml);
+}
+
+function generateFallbackHtml(username: string): string {
+  const vercelDomain = 'https://top8-pi.vercel.app';
+
+  return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/top8_icon_text_1024.png" />
+    <link rel="icon" type="image/png" href="${vercelDomain}/top8_icon_text_1024.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Top 8</title>
-    <script type="module" crossorigin src="/assets/index-BWCnypPi.js"></script>
+    <title>${username}'s Top 8 - Farcaster Top 8</title>
+
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="${username}'s Top 8 on Farcaster" />
+    <meta property="og:description" content="Check out ${username}'s Top 8 friends on Farcaster! MySpace for Farcaster." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${vercelDomain}/${username}" />
+    <meta property="og:image" content="${SUPABASE_URL}/functions/v1/og-image?username=${encodeURIComponent(username)}" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${username}'s Top 8 on Farcaster" />
+    <meta name="twitter:description" content="Check out ${username}'s Top 8 friends on Farcaster! MySpace for Farcaster." />
+    <meta name="twitter:image" content="${SUPABASE_URL}/functions/v1/og-image?username=${encodeURIComponent(username)}" />
+
+    <!-- Farcaster Frame Meta Tags -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="${SUPABASE_URL}/functions/v1/og-image?username=${encodeURIComponent(username)}" />
+
+    <!-- Farcaster Mini App Meta Tags -->
+    <meta name="fc:miniapp" content='{"version":"next","imageUrl":"${SUPABASE_URL}/functions/v1/og-image?username=${encodeURIComponent(username)}","button":{"title":"View Top 8","action":{"type":"launch_frame"}}}' />
+
+    <meta http-equiv="refresh" content="0; url=${vercelDomain}/${username}" />
+    <script>window.location.href = "${vercelDomain}/${username}";</script>
+    <script type="module" crossorigin src="/assets/index-BW6RUQ8t.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-sh_xZEn1.css">
   </head>
   <body>
     <div id="root"></div>
+    <p>Redirecting to ${username}'s Top 8...</p>
   </body>
 </html>`;
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return res.status(200).send(indexHtml);
 }
