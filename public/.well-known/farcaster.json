@@ -1,0 +1,22 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjIzMDk0MSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEI1NDc1QkU2MkIzQTc0QkM1ZTREMEZkRTcwM0QwNzAwZWUwN2VCMTkifQ",
+    "payload": "eyJkb21haW4iOiJmYXJjYXN0ZXItdG9wLTgtZnJpZS1jMDYwLmJvbHQuaG9zdCJ9",
+    "signature": "MHgwNzBlMTQ1YTlmZDg1N2NhNjIzMWYwNDZiM2ZhNTJmMmQxMzY2YWM5M2U0MTI0YTcyNDVmMzJmMzkyN2YyOGY3MDA3ZDM4NzY1MmIwNmFlMzYzMmMyMDlkODIyNzZkMmNiYjY3OGE5ZjM1YjczNzZmZGE1MjViMzAyNTllMWEwYzFi"
+  },
+  "baseBuilder": {
+    "allowedAddresses": ["0xE9618fD672Ee5C7FDbF5E052e073744Be5D2233A"]
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Top 8 Friend Space",
+    "homeUrl": "https://farcaster-top-8-frie-c060.bolt.host",
+    "iconUrl": "https://farcaster-top-8-frie-c060.bolt.host/top8_icon_text_1024.png",
+    "primaryCategory": "social",
+    "tags": ["farcaster", "social", "friends", "myspace", "top8"],
+    "subtitle": "Your Farcaster Top 8",
+    "description": "Remember MySpace Top 8? Now for Farcaster. Auto-generated from your interactions, fully customizable. Rank and share your closest friends.",
+    "tagline": "Rank your Farcaster friends",
+    "noindex": true
+  }
+}
