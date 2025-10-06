@@ -1,4 +1,8 @@
 import { Pencil } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useState } from 'react';
 import { NeynarUser } from '../lib/neynar';
 
 type Top8Entry = {
@@ -18,10 +22,97 @@ type Top8GridProps = {
   onShare?: () => void;
   onSignOut?: () => void;
   onCardClick?: (slot: number) => void;
+  onReorder?: (newEntries: Top8Entry[]) => void;
   loadingTop8?: boolean;
   loadingFriends?: boolean;
   onSignInClick?: () => void;
 };
+
+type SortableCardProps = {
+  slot: number;
+  user?: NeynarUser;
+  isEditMode: boolean;
+  loadingTop8: boolean;
+  onCardClick: () => void;
+  isDragging?: boolean;
+};
+
+function SortableCard({ slot, user, isEditMode, loadingTop8, onCardClick }: SortableCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id: slot });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.5 : 1,
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (!isEditMode || isSortableDragging) return;
+    if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
+      return;
+    }
+    onCardClick();
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white border border-[#ccc] p-2 xs:p-3 relative ${
+        isEditMode ? 'cursor-move hover:border-[#0066cc]' : user ? 'cursor-pointer hover:border-[#0066cc]' : ''
+      }`}
+      onClick={handleClick}
+      {...(isEditMode ? { ...attributes, ...listeners, 'data-drag-handle': true } : {})}
+    >
+      {isEditMode && (
+        <div className="absolute top-0.5 right-0.5 xs:top-1 xs:right-1 bg-white border border-[#999] rounded-full p-0.5 xs:p-1">
+          <Pencil size={10} className="text-[#666] xs:w-3 xs:h-3" />
+        </div>
+      )}
+
+      <div className="absolute top-0.5 left-0.5 xs:top-1 xs:left-1 bg-[#ff9933] text-white text-[10px] xs:text-xs px-1.5 xs:px-2 py-0.5 font-bold">
+        {slot}
+      </div>
+
+      {user ? (
+        <>
+          <img
+            src={user.pfp_url}
+            alt={user.display_name}
+            className="w-full aspect-square object-cover border border-[#999] mb-1 xs:mb-2 mt-3 xs:mt-4"
+          />
+          <div className="text-center">
+            <div className="text-[#0066cc] font-bold text-xs xs:text-sm truncate hover:underline cursor-pointer">
+              {user.display_name}
+            </div>
+            <div className="text-[#666] text-[10px] xs:text-xs truncate">
+              @{user.username}
+            </div>
+          </div>
+        </>
+      ) : loadingTop8 ? (
+        <>
+          <div className="w-full aspect-square bg-gray-200 animate-pulse border border-[#999] mb-1 xs:mb-2 mt-3 xs:mt-4"></div>
+          <div className="text-center">
+            <div className="h-3 xs:h-4 bg-gray-200 animate-pulse rounded mb-1"></div>
+            <div className="h-2 xs:h-3 bg-gray-200 animate-pulse rounded w-3/4 mx-auto"></div>
+          </div>
+        </>
+      ) : (
+        <div className="w-full aspect-square bg-[#f0f0f0] border border-[#999] mb-1 xs:mb-2 mt-3 xs:mt-4 flex items-center justify-center">
+          <span className="text-[#999] text-lg xs:text-xl">+</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Top8Grid({
   entries,
@@ -35,10 +126,55 @@ export function Top8Grid({
   onShare,
   onSignOut,
   onCardClick,
+  onReorder,
   loadingTop8 = false,
   loadingFriends = false,
   onSignInClick,
 }: Top8GridProps) {
+  const [activeId, setActiveId] = useState<number | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as number);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over || active.id === over.id || !onReorder) return;
+
+    const oldIndex = entries.findIndex(e => e.slot === active.id);
+    const newIndex = entries.findIndex(e => e.slot === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newEntries = [...entries];
+    const [movedItem] = newEntries.splice(oldIndex, 1);
+    newEntries.splice(newIndex, 0, movedItem);
+
+    const reorderedEntries = newEntries.map((entry, index) => ({
+      ...entry,
+      slot: index + 1,
+    }));
+
+    onReorder(reorderedEntries);
+  };
+
+  const sortedEntries = [...entries].sort((a, b) => a.slot - b.slot);
+  const filledEntries = Array.from({ length: 8 }).map((_, index) => {
+    const entry = sortedEntries.find(e => e.slot === index + 1);
+    return entry || { slot: index + 1 };
+  });
+
+  const activeEntry = filledEntries.find(e => e.slot === activeId);
   return (
     <div className="h-screen w-screen bg-[#f8f8f8] font-['Verdana',_Arial,_sans-serif] flex flex-col overflow-hidden">
       <div className="bg-[#ffffee] border-b border-[#aaa] h-full flex flex-col">
@@ -93,70 +229,68 @@ export function Top8Grid({
               {' '}friends.
             </p>
 
-            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 xs:gap-3 mb-4 xs:mb-6 max-w-4xl mx-auto">
-              {Array.from({ length: 8 }).map((_, index) => {
-                const entry = entries.find(e => e.slot === index + 1);
-                const user = entry?.user;
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              autoScroll={{ threshold: { x: 0, y: 0.2 } }}
+            >
+              <SortableContext
+                items={filledEntries.map(e => e.slot)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 xs:gap-3 mb-4 xs:mb-6 max-w-4xl mx-auto">
+                  {filledEntries.map((entry) => {
+                    const handleCardClick = () => {
+                      if (isEditMode && onCardClick) {
+                        onCardClick(entry.slot);
+                      } else if (entry.user) {
+                        window.location.href = `/${entry.user.username}`;
+                      }
+                    };
 
-                const handleCardClick = () => {
-                  if (isEditMode && onCardClick) {
-                    onCardClick(index + 1);
-                  } else if (user) {
-                    window.location.href = `/${user.username}`;
-                  }
-                };
+                    return (
+                      <SortableCard
+                        key={entry.slot}
+                        slot={entry.slot}
+                        user={entry.user}
+                        isEditMode={isEditMode}
+                        loadingTop8={loadingTop8}
+                        onCardClick={handleCardClick}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
 
-                return (
-                  <div
-                    key={index}
-                    className={`bg-white border border-[#ccc] p-2 xs:p-3 relative ${
-                      isEditMode && onCardClick ? 'cursor-pointer hover:border-[#0066cc]' : user ? 'cursor-pointer hover:border-[#0066cc]' : ''
-                    }`}
-                    onClick={handleCardClick}
-                  >
-                    {isEditMode && (
-                      <div className="absolute top-0.5 right-0.5 xs:top-1 xs:right-1 bg-white border border-[#999] rounded-full p-0.5 xs:p-1">
-                        <Pencil size={10} className="text-[#666] xs:w-3 xs:h-3" />
-                      </div>
-                    )}
-
+              <DragOverlay>
+                {activeId && activeEntry ? (
+                  <div className="bg-white border-2 border-[#0066cc] p-2 xs:p-3 relative shadow-lg rotate-3">
                     <div className="absolute top-0.5 left-0.5 xs:top-1 xs:left-1 bg-[#ff9933] text-white text-[10px] xs:text-xs px-1.5 xs:px-2 py-0.5 font-bold">
-                      {index + 1}
+                      {activeEntry.slot}
                     </div>
-
-                    {user ? (
+                    {activeEntry.user && (
                       <>
                         <img
-                          src={user.pfp_url}
-                          alt={user.display_name}
+                          src={activeEntry.user.pfp_url}
+                          alt={activeEntry.user.display_name}
                           className="w-full aspect-square object-cover border border-[#999] mb-1 xs:mb-2 mt-3 xs:mt-4"
                         />
                         <div className="text-center">
-                          <div className="text-[#0066cc] font-bold text-xs xs:text-sm truncate hover:underline cursor-pointer">
-                            {user.display_name}
+                          <div className="text-[#0066cc] font-bold text-xs xs:text-sm truncate">
+                            {activeEntry.user.display_name}
                           </div>
                           <div className="text-[#666] text-[10px] xs:text-xs truncate">
-                            @{user.username}
+                            @{activeEntry.user.username}
                           </div>
                         </div>
                       </>
-                    ) : loadingTop8 ? (
-                      <>
-                        <div className="w-full aspect-square bg-gray-200 animate-pulse border border-[#999] mb-1 xs:mb-2 mt-3 xs:mt-4"></div>
-                        <div className="text-center">
-                          <div className="h-3 xs:h-4 bg-gray-200 animate-pulse rounded mb-1"></div>
-                          <div className="h-2 xs:h-3 bg-gray-200 animate-pulse rounded w-3/4 mx-auto"></div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-full aspect-square bg-[#f0f0f0] border border-[#999] mb-1 xs:mb-2 mt-3 xs:mt-4 flex items-center justify-center">
-                        <span className="text-[#999] text-lg xs:text-xl">+</span>
-                      </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
 
             <div className="text-right max-w-4xl mx-auto">
               <a

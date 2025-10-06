@@ -187,6 +187,14 @@ export function UserPage() {
     setSearchModalOpen(true);
   };
 
+  const handleReorder = (newEntries: Array<{ slot: number; user?: NeynarUser; target_fid?: number }>) => {
+    setEntries(newEntries.map(e => ({
+      slot: e.slot,
+      user: e.user,
+      target_fid: e.target_fid || e.user?.fid || 0,
+    })));
+  };
+
   const handleUserSelect = async (selectedUser: NeynarUser) => {
     if (editingSlot === null) return;
 
@@ -383,6 +391,7 @@ export function UserPage() {
         onShare={handleShare}
         onSignOut={isOwner ? signOut : undefined}
         onCardClick={handleCardClick}
+        onReorder={handleReorder}
         loadingTop8={loadingTop8}
         loadingFriends={loadingFriends}
         onSignInClick={!canEdit && !miniAppContext.isInMiniApp ? () => setSignInModalOpen(true) : undefined}
