@@ -7,6 +7,7 @@ import { getUserByUsername, getReciprocalFollowers, NeynarUser } from '../lib/ne
 import { getOrCreateTop8, updateTop8, upsertProfile } from '../lib/top8Service';
 import { updateMetaTags, getOGImageUrl } from '../lib/metaTags';
 import { useMiniAppContext } from '../lib/useMiniAppContext';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 const NEYNAR_CLIENT_ID = import.meta.env.VITE_NEYNAR_CLIENT_ID || '1b18763f-472a-4933-b485-18fb1463766f';
 
@@ -270,8 +271,11 @@ export function UserPage() {
     setIsEditMode(false);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    if (!username) return;
+
     const url = `${window.location.origin}/${username}`;
+    const ogImageUrl = getOGImageUrl(username);
     const texts = [
       `Just ranked my Top 8 on Farcaster 🔥`,
       `My Top 8 is live! Who made the cut? 👀`,
@@ -281,11 +285,27 @@ export function UserPage() {
     ];
     const text = texts[Math.floor(Math.random() * texts.length)];
 
-    // Farcaster Warpcast composer URL
-    const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}&embeds[]=${encodeURIComponent(url)}`;
+    if (miniAppContext.isInMiniApp) {
+      try {
+        console.log('[Share] Using MiniKit SDK composeCast');
+        const result = await sdk.actions.composeCast({
+          text,
+          embeds: [ogImageUrl, url],
+        });
 
-    // Open Farcaster composer in new tab
-    window.open(warpcastUrl, '_blank');
+        if (result?.cast) {
+          console.log('[Share] Cast created successfully:', result.cast.hash);
+        } else {
+          console.log('[Share] Cast creation cancelled by user');
+        }
+      } catch (error) {
+        console.error('[Share] Error calling composeCast:', error);
+      }
+    } else {
+      console.log('[Share] Using browser Warpcast compose URL');
+      const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}&embeds[]=${encodeURIComponent(ogImageUrl)}&embeds[]=${encodeURIComponent(url)}`;
+      window.open(warpcastUrl, '_blank');
+    }
   };
 
   const handleSignInModalClick = async () => {
