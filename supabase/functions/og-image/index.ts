@@ -134,7 +134,8 @@ function generateOGImage(
   const width = 900;
   const height = 600;
   const cardSize = 180;
-  const gap = 20;
+  const horizontalGap = 20;
+  const verticalGap = 50;
   const startX = 30;
   const startY = 140;
 
@@ -143,8 +144,8 @@ function generateOGImage(
   const cards = sortedEntries.slice(0, 8).map((entry, index) => {
     const col = index % 4;
     const row = Math.floor(index / 4);
-    const x = startX + col * (cardSize + gap);
-    const y = startY + row * (cardSize + gap);
+    const x = startX + col * (cardSize + horizontalGap);
+    const y = startY + row * (cardSize + verticalGap);
 
     const username = entry.target?.username || "";
     const pfpBase64 = entry.target?.pfp_base64 || "";
