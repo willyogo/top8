@@ -1,5 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
-
 const SUPABASE_URL = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
 
 const CRAWLER_USER_AGENTS = [
@@ -48,19 +46,20 @@ function extractUsername(pathname: string): string | null {
   return null;
 }
 
-export async function middleware(request: NextRequest) {
+export default async function middleware(request: Request) {
   try {
+    const url = new URL(request.url);
     const userAgent = request.headers.get('user-agent') || '';
-    const pathname = request.nextUrl.pathname;
+    const pathname = url.pathname;
 
     if (pathname === '/' || pathname === '') {
-      return NextResponse.next();
+      return;
     }
 
     const username = extractUsername(pathname);
 
     if (!username) {
-      return NextResponse.next();
+      return;
     }
 
     if (isCrawler(userAgent)) {
@@ -75,12 +74,12 @@ export async function middleware(request: NextRequest) {
 
         if (!response.ok) {
           console.error(`Edge function returned ${response.status} for username: ${username}`);
-          return NextResponse.next();
+          return;
         }
 
         const html = await response.text();
 
-        return new NextResponse(html, {
+        return new Response(html, {
           status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
@@ -89,14 +88,14 @@ export async function middleware(request: NextRequest) {
         });
       } catch (error) {
         console.error('Error fetching from edge function:', error);
-        return NextResponse.next();
+        return;
       }
     }
 
-    return NextResponse.next();
+    return;
   } catch (error) {
     console.error('Middleware error:', error);
-    return NextResponse.next();
+    return;
   }
 }
 
