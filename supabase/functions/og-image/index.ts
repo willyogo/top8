@@ -97,16 +97,34 @@ Deno.serve(async (req: Request) => {
 });
 
 async function fetchImageAsBase64(imageUrl: string): Promise<string> {
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status}`);
+  try {
+    const response = await fetch(imageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Top8Bot/1.0)'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+
+    const base64 = btoa(binary);
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    return `data:${contentType};base64,${base64}`;
+  } catch (err) {
+    console.error(`Error fetching image ${imageUrl}:`, err);
+    throw err;
   }
-  const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(
-    String.fromCharCode(...new Uint8Array(arrayBuffer))
-  );
-  const contentType = response.headers.get('content-type') || 'image/jpeg';
-  return `data:${contentType};base64,${base64}`;
 }
 
 function generateOGImage(
@@ -115,10 +133,10 @@ function generateOGImage(
 ): string {
   const width = 900;
   const height = 600;
-  const cardSize = 120;
-  const gap = 15;
-  const startX = 90;
-  const startY = 160;
+  const cardSize = 180;
+  const gap = 20;
+  const startX = 30;
+  const startY = 140;
 
   const sortedEntries = [...entries].sort((a, b) => a.slot - b.slot);
 
@@ -135,11 +153,11 @@ function generateOGImage(
     return `
       <g>
         <rect x="${x}" y="${y}" width="${cardSize}" height="${cardSize}" fill="#fff" stroke="#ccc" stroke-width="2"/>
-        ${pfpBase64 ? `<image x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" href="${pfpBase64}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" fill="#f0f0f0"/>`}
-        <text x="${x + cardSize / 2}" y="${y + cardSize - 30}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0066cc">${escapeXml(truncate(displayName, 10))}</text>
-        <text x="${x + cardSize / 2}" y="${y + cardSize - 15}" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">@${escapeXml(truncate(username, 10))}</text>
-        <circle cx="${x + 15}" cy="${y + 15}" r="10" fill="#ff9933"/>
-        <text x="${x + 15}" y="${y + 19}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">${entry.slot}</text>
+        ${pfpBase64 ? `<image x="${x + 15}" y="${y + 35}" width="${cardSize - 30}" height="${cardSize - 30}" href="${pfpBase64}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 15}" y="${y + 35}" width="${cardSize - 30}" height="${cardSize - 30}" fill="#f0f0f0"/>`}
+        <text x="${x + cardSize / 2}" y="${y + cardSize - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0066cc">${escapeXml(truncate(displayName, 12))}</text>
+        <text x="${x + cardSize / 2}" y="${y + cardSize - 20}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">@${escapeXml(truncate(username, 12))}</text>
+        <circle cx="${x + 20}" cy="${y + 20}" r="14" fill="#ff9933"/>
+        <text x="${x + 20}" y="${y + 26}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">${entry.slot}</text>
       </g>
     `;
   }).join("");
