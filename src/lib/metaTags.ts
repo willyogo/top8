@@ -18,8 +18,6 @@ export function updateMetaTags(params: {
     { name: 'twitter:title', content: params.title },
     { name: 'twitter:description', content: params.description },
     { name: 'twitter:image', content: params.image },
-    { property: 'fc:frame', content: 'vNext' },
-    { property: 'fc:frame:image', content: params.image },
   ];
 
   metaTags.forEach(({ property, name, content }) => {
@@ -42,6 +40,7 @@ export function updateMetaTags(params: {
   // Update mini app metadata
   const miniAppMeta = {
     version: '1',
+    name: params.title,
     imageUrl: params.image,
     button: {
       title: 'View Top 8',
