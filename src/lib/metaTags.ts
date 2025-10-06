@@ -46,8 +46,7 @@ export function updateMetaTags(params: {
     button: {
       title: 'View Top 8',
       action: {
-        type: 'launch_miniapp',
-        url: params.url
+        type: 'launch_miniapp'
       }
     }
   };

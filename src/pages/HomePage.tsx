@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import { SignInButton } from '../components/SignInButton';
 import { useMiniAppContext } from '../lib/useMiniAppContext';
 import { getUserByFid } from '../lib/neynar';
+import { updateMetaTags } from '../lib/metaTags';
 
 export function HomePage() {
   const [username, setUsername] = useState('');
@@ -14,6 +15,15 @@ export function HomePage() {
   const miniAppContext = useMiniAppContext();
   const [loadingMiniAppUser, setLoadingMiniAppUser] = useState(false);
   const [miniAppUserLoaded, setMiniAppUserLoaded] = useState(false);
+
+  React.useEffect(() => {
+    updateMetaTags({
+      title: 'Farcaster Top 8 Friend Space',
+      description: 'Bring back the MySpace classic! Rank your Top 8 friends on Farcaster.',
+      image: `${window.location.origin}/top8splash.png`,
+      url: window.location.origin,
+    });
+  }, []);
 
   React.useEffect(() => {
     if (userParam) {
