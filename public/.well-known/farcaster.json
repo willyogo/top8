@@ -12,6 +12,8 @@
     "name": "Top 8 Friend Space",
     "homeUrl": "https://farcaster-top-8-frie-c060.bolt.host",
     "iconUrl": "https://farcaster-top-8-frie-c060.bolt.host/top8_icon_text_1024.png",
+    "splashImageUrl": "https://farcaster-top-8-frie-c060.bolt.host/top8_icon_text_200.png",
+    "splashBackgroundColor": "#FFFFEE",
     "primaryCategory": "social",
     "tags": ["farcaster", "social", "friends", "myspace", "top8"],
     "subtitle": "Your Farcaster Top 8",
