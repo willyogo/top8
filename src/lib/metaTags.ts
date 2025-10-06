@@ -38,6 +38,26 @@ export function updateMetaTags(params: {
 
     element.setAttribute('content', content);
   });
+
+  // Update mini app metadata
+  const miniAppMeta = {
+    version: 'next',
+    imageUrl: params.image,
+    button: {
+      title: 'View Top 8',
+      action: {
+        type: 'launch_frame'
+      }
+    }
+  };
+
+  let miniAppElement = document.querySelector('meta[name="fc:miniapp"]') as HTMLMetaElement;
+  if (!miniAppElement) {
+    miniAppElement = document.createElement('meta');
+    miniAppElement.setAttribute('name', 'fc:miniapp');
+    document.head.appendChild(miniAppElement);
+  }
+  miniAppElement.setAttribute('content', JSON.stringify(miniAppMeta));
 }
 
 export function getOGImageUrl(username: string): string {

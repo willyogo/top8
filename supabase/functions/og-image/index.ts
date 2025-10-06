@@ -52,6 +52,7 @@ Deno.serve(async (req: Request) => {
         entries:top8_entries(
           slot,
           target:profiles!top8_entries_target_fid_fkey(
+            username,
             display_name,
             pfp_url
           )
@@ -104,15 +105,17 @@ function generateOGImage(
     const y = startY + row * (cardSize + gap);
 
     const displayName = entry.target?.display_name || "Unknown";
+    const username = entry.target?.username || "";
     const pfpUrl = entry.target?.pfp_url || "";
 
     return `
       <g>
-        <rect x="${x}" y="${y}" width="${cardSize}" height="${cardSize}" fill="#ffffee" stroke="#aaa" stroke-width="2"/>
-        ${pfpUrl ? `<image x="${x + 10}" y="${y + 10}" width="${cardSize - 20}" height="${cardSize - 60}" href="${pfpUrl}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 10}" y="${y + 10}" width="${cardSize - 20}" height="${cardSize - 60}" fill="#ddd"/>`}
-        <text x="${x + cardSize / 2}" y="${y + cardSize - 20}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0066cc">${truncate(displayName, 12)}</text>
-        <circle cx="${x + 20}" cy="${y + 20}" r="12" fill="#ff9933"/>
-        <text x="${x + 20}" y="${y + 25}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">${entry.slot}</text>
+        <rect x="${x}" y="${y}" width="${cardSize}" height="${cardSize}" fill="#fff" stroke="#ccc" stroke-width="2"/>
+        ${pfpUrl ? `<image x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" href="${pfpUrl}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${x + 10}" y="${y + 25}" width="${cardSize - 20}" height="${cardSize - 20}" fill="#f0f0f0"/>`}
+        <text x="${x + cardSize / 2}" y="${y + cardSize - 30}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0066cc">${escapeXml(truncate(displayName, 10))}</text>
+        <text x="${x + cardSize / 2}" y="${y + cardSize - 15}" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">@${escapeXml(truncate(username, 10))}</text>
+        <circle cx="${x + 15}" cy="${y + 15}" r="10" fill="#ff9933"/>
+        <text x="${x + 15}" y="${y + 19}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">${entry.slot}</text>
       </g>
     `;
   }).join("");
