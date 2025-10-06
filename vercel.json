@@ -43,11 +43,5 @@
         }
       ]
     }
-  ],
-  "regions": ["iad1"],
-  "functions": {
-    "middleware.ts": {
-      "runtime": "edge"
-    }
-  }
+  ]
 }
