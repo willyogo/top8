@@ -62,5 +62,15 @@ export function updateMetaTags(params: {
 
 export function getOGImageUrl(username: string): string {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) {
+    return `${window.location.origin}/top8splash.png`;
+  }
   return `${supabaseUrl}/functions/v1/og-image?username=${encodeURIComponent(username)}`;
+}
+
+export function getAbsoluteUrl(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  return `${window.location.origin}${path.startsWith('/') ? path : '/' + path}`;
 }
