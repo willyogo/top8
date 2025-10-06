@@ -34,10 +34,10 @@ type SortableCardProps = {
   isEditMode: boolean;
   loadingTop8: boolean;
   onCardClick: () => void;
-  isDragging?: boolean;
+  wasDragging: boolean;
 };
 
-function SortableCard({ slot, user, isEditMode, loadingTop8, onCardClick }: SortableCardProps) {
+function SortableCard({ slot, user, isEditMode, loadingTop8, onCardClick, wasDragging }: SortableCardProps) {
   const {
     attributes,
     listeners,
@@ -45,7 +45,7 @@ function SortableCard({ slot, user, isEditMode, loadingTop8, onCardClick }: Sort
     transform,
     transition,
     isDragging: isSortableDragging,
-  } = useSortable({ id: slot });
+  } = useSortable({ id: slot, disabled: !isEditMode });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -53,12 +53,10 @@ function SortableCard({ slot, user, isEditMode, loadingTop8, onCardClick }: Sort
     opacity: isSortableDragging ? 0.5 : 1,
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (!isEditMode || isSortableDragging) return;
-    if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
-      return;
+  const handleClick = () => {
+    if (!wasDragging) {
+      onCardClick();
     }
-    onCardClick();
   };
 
   return (
@@ -69,7 +67,7 @@ function SortableCard({ slot, user, isEditMode, loadingTop8, onCardClick }: Sort
         isEditMode ? 'cursor-move hover:border-[#0066cc]' : user ? 'cursor-pointer hover:border-[#0066cc]' : ''
       }`}
       onClick={handleClick}
-      {...(isEditMode ? { ...attributes, ...listeners, 'data-drag-handle': true } : {})}
+      {...(isEditMode ? { ...attributes, ...listeners } : {})}
     >
       {isEditMode && (
         <div className="absolute top-0.5 right-0.5 xs:top-1 xs:right-1 bg-white border border-[#999] rounded-full p-0.5 xs:p-1">
@@ -132,6 +130,7 @@ export function Top8Grid({
   onSignInClick,
 }: Top8GridProps) {
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [wasDragging, setWasDragging] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -143,11 +142,16 @@ export function Top8Grid({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as number);
+    setWasDragging(true);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+
+    setTimeout(() => {
+      setWasDragging(false);
+    }, 100);
 
     if (!over || active.id === over.id || !onReorder) return;
 
@@ -258,6 +262,7 @@ export function Top8Grid({
                         isEditMode={isEditMode}
                         loadingTop8={loadingTop8}
                         onCardClick={handleCardClick}
+                        wasDragging={wasDragging}
                       />
                     );
                   })}
