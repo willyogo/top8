@@ -44,7 +44,7 @@ export function Top8Grid({
       <div className="bg-[#ffffee] border-b border-[#aaa] h-full flex flex-col">
         <div className="bg-gradient-to-b from-[#ffcc66] to-[#ff9933] border-b border-[#aaa] px-4 py-2 flex justify-between items-center flex-shrink-0">
             <h1 className="text-white text-xl font-bold tracking-tight">
-              {ownerDisplayName}'s Friend Space
+              {ownerDisplayName}'s Top 8
             </h1>
             <div className="flex gap-2">
               {onShare && (
