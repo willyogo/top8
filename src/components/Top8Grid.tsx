@@ -297,7 +297,7 @@ export function Top8Grid({
               </DragOverlay>
             </DndContext>
 
-            <div className="text-right max-w-4xl mx-auto">
+            <div className="text-right max-w-4xl mx-auto pb-6">
               <a
                 href={`/friends/${ownerUsername}`}
                 className="text-[#0066cc] text-xs xs:text-sm hover:underline"

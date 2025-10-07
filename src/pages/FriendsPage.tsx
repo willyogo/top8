@@ -119,7 +119,7 @@ export function FriendsPage() {
           </h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-8">
             <div className="mb-4 flex justify-between items-center">
               <p className="text-[#333] text-sm">
                 <strong className="text-[#0066cc]">{friends.length.toLocaleString()}</strong> total friends
