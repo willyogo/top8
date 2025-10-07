@@ -35,7 +35,24 @@ export function FrameProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('[Frame SDK] Initializing...');
 
-        const frameContext = await sdk.context;
+        const isInMiniApp = await sdk.isInMiniApp(1500);
+        console.log('[Frame SDK] isInMiniApp:', isInMiniApp);
+
+        if (!isInMiniApp) {
+          console.log('[Frame SDK] Not in miniapp environment, skipping full initialization');
+          setIsSDKLoaded(true);
+          setIsInFrame(false);
+          return;
+        }
+
+        const contextTimeout = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Context load timeout')), 3000);
+        });
+
+        const frameContext = await Promise.race([
+          sdk.context,
+          contextTimeout
+        ]);
         console.log('[Frame SDK] Context loaded:', frameContext);
 
         setContext(frameContext);
