@@ -67,17 +67,21 @@ export function SignInButton() {
 
   return (
     <>
-      <div
-        ref={hiddenButtonRef}
-        className="neynar_signin hidden"
-        data-client_id={NEYNAR_CLIENT_ID}
-        data-success-callback="onSignInSuccess"
-        data-theme="light"
-      />
-      <button
-        onClick={handleClick}
-        className="w-full bg-gradient-to-b from-[#6b46c1] to-[#553c9a] text-white font-bold py-2 px-4 border border-[#999] hover:from-[#7c3aed] hover:to-[#6d28d9] transition-all"
-      >
+    <div
+      ref={hiddenButtonRef}
+      className="neynar_signin hidden"
+      data-client_id={NEYNAR_CLIENT_ID}
+      data-success-callback="onSignInSuccess"
+      data-theme="light"
+      aria-hidden="true"
+    />
+     <button
+      onClick={handleClick}
+      disabled={isLoading}
+      aria-label="Sign in with Farcaster"
+      aria-busy={isLoading}
+      className="w-full bg-gradient-to-b from-[#6b46c1] to-[#553c9a] text-white font-bold py-2 px-4 border border-[#999] hover:from-[#7c3aed] hover:to-[#6d28d9] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none rounded-lg"
+    >
         Sign in with Farcaster
       </button>
     </>
